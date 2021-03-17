@@ -6,10 +6,14 @@ import numpy as np
 class Delaunay_Complete(scipy.spatial.Delaunay):
     "Extends Delaunay triangulation for closed 3D objects"
 
-    @property
-    def faces(self):
-        "Coordinate of the triangles including the ones for the left-out point"
-        faces = [self._points[e[1:]] for e in self.vertices]
+    def __init__(self, *args, **kwargs):
+        "Delaunay tessellation in 3 dimensions for closed objects."
+        super().__init__(*args, **kwargs)
+        self.faces_indexes = self.get_faces_indexes()
+
+    def get_faces_indexes(self):
+        "Return an array of the indexes of the points to use for each face"
+        faces_indexes = self.simplices[:, 1:]
 
         # find the points with missing triangles around the left-out point
         unique, counts = np.unique(self.simplices[:, 1:], return_counts=True)
@@ -20,9 +24,14 @@ class Delaunay_Complete(scipy.spatial.Delaunay):
             for p2 in reference_point_neighbors[i + 1:]:
                 if self.points_are_connected(p1, p2):
                     new_face_idx = [self.reference_point_idx, p1, p2]
-                    faces.append(self._points[new_face_idx])
+                    faces_indexes = np.vstack((faces_indexes, new_face_idx))
 
-        return faces
+        return faces_indexes
+
+    @property
+    def faces(self):
+        "Coordinate of the triangles including the ones for the left-out point"
+        return [self._points[e] for e in self.faces_indexes]
 
     @property
     def face_centroids(self):
