@@ -65,6 +65,109 @@ def allocate_spherical_triangle(inv, order_all, V):
     return triangle_idx_all
 
 
+def allocate_spherical_triangle_block(inv, order_all, V, block_size=10000):
+    """Allocate 3D-vectors to a spherical triangle from precomputed variables
+
+    Parameters
+    ----------
+    inv: array, shape = (n_triangles, 3, 3)
+        For each triangle, the inverse of (3, 3) matrix corresponding to the
+        verticies coordinates as columns.
+
+    order_all: array of integers, shape = (n_triangles, n_triangles)
+        For each triangle (rows), the indexes for the triangles sorted by
+        centroid distances.
+
+    V: array, shape = (n_points, 3)
+        The range of 3-dimensional arrays that need to be mapped on the sphere.
+
+    block_size: int, default = 10000
+        Number of arrays of V to proces simultaneously. Dot products between
+        a (3, 3) and a (3, block_size) arrays will be performed when looking
+        the matching triangle of the elements of V, taking advantage of
+        numpy's parallelization.
+
+    Returns
+    -------
+    triangle_idx_all: array of integers, shape = (n_points)
+        For each element of V, the index of the spherical triangle it belongs
+        to.
+
+    """
+    triangle_idx_all = np.zeros(len(V), dtype=np.uint)
+
+    # Preallocation using the first data point
+    idx = allocate_spherical_triangle(inv, order_all, V[[0]])
+    triangle_idx_t_minus_1 = idx[0]
+
+    block_start = np.arange(0, len(V), block_size)
+    block_end = np.append(block_start[1:], len(V))
+
+    for start, stop in zip(block_start, block_end):
+        # The triangles will be tested starting at the closest of the
+        # triangle allocated a t - 1
+        order = order_all[triangle_idx_t_minus_1]
+        allocated = np.zeros(stop - start, dtype=bool)
+
+        # Loop over all spherical triangles according to order
+        for triangle_idx, inverted_triangle_coordinates in zip(order, inv[order]):  # noqa E501
+            # Check if the vectors to allocate belong to the triangle
+            to_allocate = np.argwhere(~allocated).flatten() + start
+            prod = np.dot(inverted_triangle_coordinates, V[to_allocate].T)
+            good_triangle = np.all(prod >= 0., axis=0)
+            # Change allocated to True for the vectors that have been allocated
+            allocated[~allocated] = good_triangle
+            # Store the triangle's index for the vectors that belong to it
+            triangle_idx_all[to_allocate[good_triangle]] = triangle_idx
+            # Break the loop once all vectors have been assigned to a triangle
+            if np.all(allocated):
+                break
+
+        # Update the triangle for sorting using the last value of the block
+        triangle_idx_t_minus_1 = triangle_idx_all[stop - 1]
+    return triangle_idx_all
+
+
+# @njit
+# def allocate_spherical_triangle_numba(inv, order, V):
+#     """Allocate 3D-vectors to a spherical triangle from precomputed variables
+#
+#     Parameters
+#     ----------
+#     inv: array, shape = (n_triangles, 3, 3)
+#         For each triangle, the inverse of (3, 3) matrix corresponding to the
+#         verticies coordinates as columns.
+#
+#     order: array of integers, shape = (n_triangles,)
+#         The order in which the triangles will be tested.
+#
+#     V: array, shape = (n_points, 3)
+#         The range of 3-dimensional arrays that need to be mapped on a sphere.
+#
+#     Returns
+#     -------
+#     triangle_idx_all: array of integers, shape = (n_points)
+#         For each element of V, the index of the spherical triangle it belongs
+#         to.
+#
+#     """
+#     triangle_idx_all = np.zeros(len(V), dtype=np.uint)
+#     for i, v in enumerate(V):  # loop over the points to test
+#         is_pos = np.zeros(len(inv), dtype=np.bool_)
+#         p = False
+#         m_idx = 0
+#         while not p and m_idx != len(inv):
+#             prod = np.dot(inv[order[m_idx]], v)
+#             p = (prod[0] >= 0.) and (prod[1] >= 0.) and (prod[2] >= 0.)
+#             is_pos[order[m_idx]] = p
+#             m_idx += 1
+#
+#         triangle_idx = np.argmax(is_pos)
+#         triangle_idx_all[i] = triangle_idx
+#
+#     return triangle_idx_all
+
+
 class Delaunay_Complete(scipy.spatial.Delaunay):
     "Extends Delaunay triangulation for closed 3D objects"
 
@@ -161,7 +264,7 @@ class Delaunay_Sphere(Delaunay_Complete):
         # Triangulation
         super().__init__(fib, *args, **kwargs)
 
-    def spherical_histogram(self, V):
+    def spherical_histogram(self, V, block_size=None):
         """Allocate each 3-dimensional vector in V to its face of the sphere
 
         Notes
@@ -175,9 +278,16 @@ class Delaunay_Sphere(Delaunay_Complete):
         """
         # Precompute variable
         inv = np.linalg.inv(self.faces.transpose(0, 2, 1))
-        order_all = self.face_centroids_sorted
+
         # Allocation of each 3D vector of V to its spherical triangle
-        triangle_idx_all = allocate_spherical_triangle(inv, order_all, V)
+        order_all = self.face_centroids_sorted
+        if block_size is None:
+            triangle_idx_all = allocate_spherical_triangle(inv, order_all, V)
+        else:
+            triangle_idx_all = allocate_spherical_triangle_block(
+                inv, order_all, V, block_size=block_size
+            )
+
         # Compute the histogram of values
         histogram = np.zeros(len(self.faces), dtype=np.int)
         unique, counts = np.unique(triangle_idx_all, return_counts=True)
