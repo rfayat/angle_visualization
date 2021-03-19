@@ -1,5 +1,6 @@
 "Triangulation for points of a closed shape in 3D"
 import scipy
+import scipy.spatial
 import numpy as np
 from . import utils
 from .utils import store_value_on_first_computation
