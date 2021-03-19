@@ -88,14 +88,10 @@ def fill_projected_faces(lat_face_all, lon_face_all, face_colors=None,
 
     # Loop over the coordinates of the faces
     for face_idx, (lat, lon) in enumerate(zip(lat_face_all, lon_face_all)):
-        # Change the filling transform for the points around the south pole
-        if np.all(lat > -85):
+        # Remove the points with longitude 0 at the south pole
+        if not (np.any(lat <= -85) and np.any(np.abs(lon) <= 5)):
             filling_transform = ccrs.Geodetic()
-        else:
-            filling_transform = ccrs.RotatedPole(pole_longitude=0.0,
-                                                 pole_latitude=90.0,
-                                                 central_rotated_longitude=180)
-        # Duplicate the first element of the coordinates to close the polygons
-        lat, lon = np.append(lat, lat[0]), np.append(lon, lon[0])
-        ax.fill(lon, lat, transform=filling_transform,
-                color=face_colors[face_idx], **kwargs)
+            # Duplicate the 1st element of the coordinates to close the shapes
+            lat, lon = np.append(lat, lat[0]), np.append(lon, lon[0])
+            ax.fill(lon, lat, transform=filling_transform,
+                    color=face_colors[face_idx], **kwargs)
