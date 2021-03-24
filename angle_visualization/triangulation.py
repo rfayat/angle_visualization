@@ -128,46 +128,6 @@ def allocate_spherical_triangle_block(inv, order_all, V, block_size=10000):
     return triangle_idx_all
 
 
-# @njit
-# def allocate_spherical_triangle_numba(inv, order, V):
-#     """Allocate 3D-vectors to a spherical triangle from precomputed variables
-#
-#     Parameters
-#     ----------
-#     inv: array, shape = (n_triangles, 3, 3)
-#         For each triangle, the inverse of (3, 3) matrix corresponding to the
-#         verticies coordinates as columns.
-#
-#     order: array of integers, shape = (n_triangles,)
-#         The order in which the triangles will be tested.
-#
-#     V: array, shape = (n_points, 3)
-#         The range of 3-dimensional arrays that need to be mapped on a sphere.
-#
-#     Returns
-#     -------
-#     triangle_idx_all: array of integers, shape = (n_points)
-#         For each element of V, the index of the spherical triangle it belongs
-#         to.
-#
-#     """
-#     triangle_idx_all = np.zeros(len(V), dtype=np.uint)
-#     for i, v in enumerate(V):  # loop over the points to test
-#         is_pos = np.zeros(len(inv), dtype=np.bool_)
-#         p = False
-#         m_idx = 0
-#         while not p and m_idx != len(inv):
-#             prod = np.dot(inv[order[m_idx]], v)
-#             p = (prod[0] >= 0.) and (prod[1] >= 0.) and (prod[2] >= 0.)
-#             is_pos[order[m_idx]] = p
-#             m_idx += 1
-#
-#         triangle_idx = np.argmax(is_pos)
-#         triangle_idx_all[i] = triangle_idx
-#
-#     return triangle_idx_all
-
-
 class Delaunay_Complete(scipy.spatial.Delaunay):
     "Extends Delaunay triangulation for closed 3D objects"
 
