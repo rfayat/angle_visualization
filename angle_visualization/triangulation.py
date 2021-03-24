@@ -264,6 +264,17 @@ class Delaunay_Sphere(Delaunay_Complete):
         # Triangulation
         super().__init__(fib, *args, **kwargs)
 
+    @property
+    @store_value_on_first_computation
+    def inverted_face_coordinates(self):
+        """Return the invert of each triangle's verticies coordinates.
+
+        More precisely, for each face, we compute the invert of the (3, 3)
+        matrix containing the verticies as columns.
+
+        """
+        return np.linalg.inv(self.faces.transpose(0, 2, 1))
+
     def spherical_histogram(self, V, block_size=None):
         """Allocate each 3-dimensional vector in V to its face of the sphere
 
@@ -276,14 +287,16 @@ class Delaunay_Sphere(Delaunay_Complete):
         related to V[t].
 
         """
-        # Precompute variable
-        inv = np.linalg.inv(self.faces.transpose(0, 2, 1))
+        inv = self.inverted_face_coordinates
 
         # Allocation of each 3D vector of V to its spherical triangle
         order_all = self.face_centroids_sorted
-        if block_size is None:
+        if len(V) == 0:
+            return np.array([]), np.zeros(len(self.faces), dtype=int)
+        elif block_size is None:
             triangle_idx_all = allocate_spherical_triangle(inv, order_all, V)
         else:
+            block_size = min(block_size, len(V))
             triangle_idx_all = allocate_spherical_triangle_block(
                 inv, order_all, V, block_size=block_size
             )
