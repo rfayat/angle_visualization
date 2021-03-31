@@ -3,6 +3,8 @@ import numpy as np
 import mpl_toolkits.mplot3d.axes3d as ax3d
 from .utils import grab_current_axis
 import cartopy.crs as ccrs
+from matplotlib.collections import PatchCollection
+import matplotlib.pyplot as plt
 LAEA = ccrs.LambertAzimuthalEqualArea(central_latitude=90)
 
 
@@ -87,11 +89,14 @@ def fill_projected_faces(lat_face_all, lon_face_all, face_colors=None,
         face_colors = [face_colors for _ in lat_face_all]
 
     # Loop over the coordinates of the faces
+    patches = []  # list of patches that will be converted to a PatchCollection
     for face_idx, (lat, lon) in enumerate(zip(lat_face_all, lon_face_all)):
         # Remove the points with longitude 0 at the south pole
         if not (np.any(lat <= -85) and np.any(np.abs(lon) <= 5)):
             filling_transform = ccrs.Geodetic()
             # Duplicate the 1st element of the coordinates to close the shapes
             lat, lon = np.append(lat, lat[0]), np.append(lon, lon[0])
-            ax.fill(lon, lat, transform=filling_transform,
-                    color=face_colors[face_idx], **kwargs)
+            # Add the resulting patch to the list of patches
+            patches += plt.fill(lon, lat, transform=filling_transform,
+                                color=face_colors[face_idx], **kwargs)
+    ax.add_collection(PatchCollection(patches))
