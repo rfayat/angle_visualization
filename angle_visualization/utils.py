@@ -1,11 +1,13 @@
 "Utils functions."
 import matplotlib.pyplot as plt
 import numpy as np
+from functools import wraps
 
 
 def unpack_first_arg(f):
     "Treat the second dimension of the first arg as independent inputs"
 
+    @wraps(f)
     def g(*args, **kwargs):
         if len(args) == 1 and isinstance(args[0], np.ndarray):
             return f(*(args[0].T), **kwargs)
@@ -40,6 +42,7 @@ def get_integer_dtype(max_value, min_value=0):
 def store_value_on_first_computation(f):
     "Compute and store the result of a method its first call"
 
+    @wraps(f)
     def g(self, *args, **kwargs):
         "Store the value of f on the first call and return it"
         method_name = f.__name__
@@ -56,6 +59,7 @@ def store_value_on_first_computation(f):
 def grab_current_axis(f):
     "Grab the current axis if None is provided"
 
+    @wraps(f)
     def g(*args, **kwargs):
         "Call f after grabbing the current axis if None is provided"
         if kwargs.get("ax") is None:
