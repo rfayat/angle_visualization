@@ -96,7 +96,7 @@ def plot_triangulated_sphere(*args, **kwargs):
     plt.close(fig)
 
 
-def plot_3D_histogram(data, *args, **kwargs):
+def plot_histogram_3D(data, *args, **kwargs):
     "Plot a 3D histogram for input 3D euclidean coordinates"
     # Create a Delaunay sphere and compute the 3D histogram
     n_points = 5000
@@ -124,7 +124,7 @@ def plot_3D_histogram(data, *args, **kwargs):
     plt.close(fig)
 
 
-def plot_projected_3D_histogram(data, *args, **kwargs):
+def plot_projected_histogram_3D(data, *args, **kwargs):
     "Plot the 2D projection of a 3D histogram"
     # Create a Delaunay sphere and compute the 3D histogram
     n_points = 5000
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     plot_triangulated_sphere(p, transparent=True)
     # Plot a 3D histogram on a triangulated sphere
     p = OUTPUT_DIR / "histogram_3D.png"
-    plot_3D_histogram(sample_data, p, transparent=True)
+    plot_histogram_3D(sample_data, p, transparent=True)
     # Plot a projected 3D histogram
     p = OUTPUT_DIR / "projected_histogram_3D.png"
-    plot_projected_3D_histogram(sample_data, p, transparent=True)
+    plot_projected_histogram_3D(sample_data, p, transparent=True)
