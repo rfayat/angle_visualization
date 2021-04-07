@@ -8,6 +8,7 @@ import scipy.spatial
 import angle_visualization
 import angle_visualization.utils
 import angle_visualization.triangulation
+import angle_visualization.shapes
 from angle_visualization.angle_utils import cartesian_to_latitude_longitude
 from pathlib import Path
 import seaborn as sns
@@ -144,13 +145,9 @@ def plot_projected_histogram_3D(data, *args, **kwargs):
     ax.gridlines()
 
     # Plot the projected faces
-    latlon_face_all = np.array([
-        cartesian_to_latitude_longitude(f, deg=True) for f in d.faces
-    ])
-    angle_visualization.fill_projected_faces(latlon_face_all[:, 0, :],
-                                             latlon_face_all[:, 1, :],
-                                             face_colors=colors, alpha=1)
-
+    angle_visualization.fill_projected_faces_euclidean(
+        *d.faces.transpose(2, 0, 1), face_colors=colors, alpha=1
+    )
     # Final tweaking and save the figure
     ax.axis("off")
     ax.set_title("3D histogram projected using LAEA projection")
@@ -159,20 +156,81 @@ def plot_projected_histogram_3D(data, *args, **kwargs):
     plt.close(fig)
 
 
+def plot_sphere(*args, **kwargs):
+    "Plot a 3D histogram for input 3D euclidean coordinates"
+    # Create the figure and rotate the axis
+    fig = plt.figure(figsize=(4, 4))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.view_init(45, 0)
+    # Plot a sphere
+    sphere = angle_visualization.shapes.Sphere3D.add_sphere(
+        radius=1., origin=[0, 0, 0], steps=30,
+        ax=ax, color="blue", alpha=.7,
+    )
+    angle_visualization.utils.set_3Dlim(*[[-.8, .8] for _ in range(3)], ax=ax)
+    # Final tweaking and save the figure
+    ax.axis("off")
+    ax.set_title("Example sphere")
+    fig.tight_layout()
+    fig.savefig(*args, **kwargs)
+    plt.close(fig)
+
+
+def plot_arrows(*args, **kwargs):
+    "Plot a 3D arrow and an xyz origin"
+    fig = plt.figure(figsize=(4, 4))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot a single 3-dimensional arrow
+    arrow = angle_visualization.shapes.Arrow3D.add_arrow(
+        2, .3, 3,
+        origin=[-.5, 0, -1],
+        color="purple",
+        mutation_scale=20,
+        arrowstyle="-|>",
+        lw=5,
+        adjust_ax_lim=False,
+        ax=ax
+    )
+
+    # Plot an xyz origin in 3D
+    xyz = angle_visualization.shapes.Arrow3D.add_xyz(
+        V=np.eye(3),
+        origin=[0, 0, 0],
+        mutation_scale=10,
+        arrowstyle="-|>",
+        lw=3,
+        adjust_ax_lim=False,
+        ax=ax
+    )
+
+    # Final axis tweaking and save the figure
+    # ax.axis("off")
+    angle_visualization.utils.set_3Dlim(*[[-1, 2] for _ in range(3)], ax=ax)
+    ax.set_title("Example arrows")
+    fig.tight_layout()
+    fig.savefig(*args, **kwargs)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
-    sample_data = pd.read_csv("README_figures/sample_data.csv")
-    # Plot of a triangulated cube
-    p = OUTPUT_DIR / "triangulated_cube.png"
-    plot_triangulated_cube(p, transparent=True)
-    # Scatterplot of the euclidean coordinates of a fibonacci sphere
-    p = OUTPUT_DIR / "fibonacci_sphere.png"
-    scatterplot_fibonacci_sphere(p, transparent=True)
-    # Plot the faces of a triangulated Fibonacci sphere
-    p = OUTPUT_DIR / "triangulated_fibonacci_sphere.png"
-    plot_triangulated_sphere(p, transparent=True)
-    # Plot a 3D histogram on a triangulated sphere
-    p = OUTPUT_DIR / "histogram_3D.png"
-    plot_histogram_3D(sample_data, p, transparent=True)
-    # Plot a projected 3D histogram
-    p = OUTPUT_DIR / "projected_histogram_3D.png"
-    plot_projected_histogram_3D(sample_data, p, transparent=True)
+    # sample_data = pd.read_csv("README_figures/sample_data.csv")
+    # # Plot of a triangulated cube
+    # p = OUTPUT_DIR / "triangulated_cube.png"
+    # plot_triangulated_cube(p, transparent=True)
+    # # Scatterplot of the euclidean coordinates of a fibonacci sphere
+    # p = OUTPUT_DIR / "fibonacci_sphere.png"
+    # scatterplot_fibonacci_sphere(p, transparent=True)
+    # # Plot the faces of a triangulated Fibonacci sphere
+    # p = OUTPUT_DIR / "triangulated_fibonacci_sphere.png"
+    # plot_triangulated_sphere(p, transparent=True)
+    # # Plot a 3D histogram on a triangulated sphere
+    # p = OUTPUT_DIR / "histogram_3D.png"
+    # plot_histogram_3D(sample_data, p, transparent=True)
+    # # Plot a projected 3D histogram
+    # p = OUTPUT_DIR / "projected_histogram_3D.png"
+    # plot_projected_histogram_3D(sample_data, p, transparent=True)
+    # p = OUTPUT_DIR / "sphere.png"
+    # plot_sphere(p, transparent=True)
+    p = OUTPUT_DIR / "arrows.png"
+    plot_arrows(p, transparent=True)

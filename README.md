@@ -1,5 +1,5 @@
 # Angle visualization
-A few python tools for visualizing 3D angles with matplotlib.
+A few python tools for visualizing 3D angles and shapes with matplotlib.
 
 ## Installation
 
@@ -54,5 +54,46 @@ TODO: LIST OF ATTRIBUTES
 
 ## Other 3D-shapes
 ### Sphere
+```python
+# Plot a sphere
+sphere = angle_visualization.shapes.Sphere3D.add_sphere(
+    radius=1.,
+    origin=[0, 0, 0],
+    steps=30,
+    ax=ax, color="blue", alpha=.7,
+)
+```
+
+
+![sphere](README_figures/sphere.png)
 ### Arrows
+
+`angle_visualization.shapes.Arrow3D` inherits from matplotlib's `FancyArrowPatch`. Plotting a single arrow an xyz origin can be done as follows:
+```python
+# Plot a single 3-dimensional arrow
+arrow = angle_visualization.shapes.Arrow3D.add_arrow(
+    2, .3, 3,
+    origin=[-.5, 0, -1],
+    color="purple",
+    mutation_scale=20,
+    arrowstyle="-|>",
+    lw=5,
+    adjust_ax_lim=False,
+    ax=ax
+)
+
+# Plot an xyz origin in 3D
+xyz = angle_visualization.shapes.Arrow3D.add_xyz(
+    V=np.eye(3),
+    origin=[0, 0, 0],
+    mutation_scale=10,
+    arrowstyle="-|>",
+    lw=3,
+    adjust_ax_lim=False,
+    ax=ax
+)
+```
+
+![arrows](README_figures/arrows.png)
+
 ### Quaternions
