@@ -16,6 +16,16 @@ def unpack_first_arg(f):
     return g
 
 
+def list_args_to_array(f):
+    "Convert input args that are list to arrays"
+
+    @wraps(f)
+    def g(*args, **kwargs):
+        args_new = [np.array(e) if isinstance(e, list) else e for e in args]
+        return f(*args_new, **kwargs)
+    return g
+
+
 def get_integer_dtype(max_value, min_value=0):
     "Return the best numpy dtype for integers with input max value"
     if min_value >= 0:

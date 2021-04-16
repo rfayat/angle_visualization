@@ -8,6 +8,7 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 from collections.abc import Iterable
 LAEA = ccrs.LambertAzimuthalEqualArea(central_latitude=90)
+TRANSFORM = ccrs.PlateCarree()
 
 
 @grab_current_axis
@@ -196,3 +197,27 @@ def fill_projected_faces_euclidean(x, y, z, **kwargs):
     return fill_projected_faces(latlon_face_all[:, 0, :],
                                 latlon_face_all[:, 1, :],
                                 **kwargs)
+
+
+@grab_current_axis
+def plot_projected(lon, lat, ax=None, **kwargs):
+    "Plot using a crs projection."
+    projected = LAEA.transform_points(TRANSFORM, lon, lat)
+    return ax.plot(*projected.T, transform=LAEA, **kwargs)
+
+
+def plot_projected_euclidean(x, y, z, **kwargs):
+    "Plot from euclidean coordinates using a crs projection."
+    lat, lon = cartesian_to_latitude_longitude(x, y, z, deg=True)
+    return plot_projected(lon, lat, **kwargs)
+
+@grab_current_axis
+def scatter_projected(lon, lat, ax=None, **kwargs):
+    "Scatterplot using a crs projection."
+    return ax.scatter(lon, lat, transform=TRANSFORM, **kwargs)
+
+
+def scatter_projected_euclidean(x, y, z, **kwargs):
+    "Scatterplot from euclidean coordinates using a crs projection."
+    lat, lon = cartesian_to_latitude_longitude(x, y, z, deg=True)
+    return scatter_projected(lon, lat, **kwargs)

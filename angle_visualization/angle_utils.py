@@ -3,11 +3,12 @@
 Author: Romain Fayat, March 2021
 """
 import numpy as np
-from .utils import unpack_first_arg
+from .utils import unpack_first_arg, list_args_to_array
 RAD2DEG = 180. / np.pi
 DEG2RAD = np.pi / 180.
 
 
+@list_args_to_array
 @unpack_first_arg
 def cartesian_to_polar(x, y, z, deg=False):
     "Convert 3D cartesian coordinates to polar (radius, inclination, azimuth)"
