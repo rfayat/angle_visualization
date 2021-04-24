@@ -52,7 +52,8 @@ def plot_faces(faces, face_colors=None, edge_colors=None, ax=None, **kwargs):
 
 
 @grab_current_axis
-def fill_projected_faces(lat_face_all, lon_face_all, face_colors=None,
+def fill_projected_faces(lat_face_all, lon_face_all,
+                         face_colors=None, edge_colors=None,
                          ax=None, **kwargs):
     """Plot a list of faces from geographic coordinates using a LAEA projection
 
@@ -126,8 +127,26 @@ def fill_projected_faces(lat_face_all, lon_face_all, face_colors=None,
     """
     # Replicate the input face_color if needed
     n_faces = len(lat_face_all)
-    if isinstance(face_colors, Iterable) and len(face_colors) != n_faces:
+
+    if kwargs.get("facecolor") is not None:
+        face_colors = [kwargs.get("facecolor")] * n_faces
+    elif kwargs.get("fc") is not None:
+        face_colors = [kwargs.get("fc")] * n_faces
+    elif face_colors is None or (isinstance(face_colors, Iterable) and len(face_colors)) != n_faces:  # noqa 501
         face_colors = [face_colors] * n_faces
+
+    # Replicate the edge color if needed or use the face color
+    if kwargs.get("ec") is not None:
+        edge_colors = [kwargs.get("ec")] * n_faces
+        kwargs.pop("ec")
+    elif kwargs.get("edgecolor") is not None:
+        edge_colors = [kwargs.get("edgecolor")] * n_faces
+        kwargs.pop("edgecolor")
+    elif isinstance(edge_colors, Iterable) and len(edge_colors) != n_faces:
+        edge_colors = [edge_colors] * n_faces
+    elif edge_colors is None:
+        edge_colors = face_colors
+
 
     # Loop over the coordinates of the faces
     patches = []  # list of patches that will be converted to a PatchCollection
@@ -139,7 +158,9 @@ def fill_projected_faces(lat_face_all, lon_face_all, face_colors=None,
             lat, lon = np.append(lat, lat[0]), np.append(lon, lon[0])
             # Add the resulting patch to the list of patches
             patches += plt.fill(lon, lat, transform=filling_transform,
-                                color=face_colors[face_idx], **kwargs)
+                                fc=face_colors[face_idx],
+                                ec=edge_colors[face_idx],
+                                **kwargs)
     patch_collection = PatchCollection(patches)
     ax.add_collection(patch_collection)
     return patch_collection
