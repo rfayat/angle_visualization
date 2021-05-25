@@ -138,15 +138,18 @@ def fill_projected_faces(lat_face_all, lon_face_all,
     # Replicate the edge color if needed or use the face color
     if kwargs.get("ec") is not None:
         edge_colors = [kwargs.get("ec")] * n_faces
-        kwargs.pop("ec")
     elif kwargs.get("edgecolor") is not None:
         edge_colors = [kwargs.get("edgecolor")] * n_faces
-        kwargs.pop("edgecolor")
     elif isinstance(edge_colors, Iterable) and len(edge_colors) != n_faces:
         edge_colors = [edge_colors] * n_faces
     elif edge_colors is None:
         edge_colors = face_colors
 
+    # Remove the parsed colors
+    kwargs.pop("facecolor", None)
+    kwargs.pop("edgecolor", None)
+    kwargs.pop("fc", None)
+    kwargs.pop("ec", None)
 
     # Loop over the coordinates of the faces
     patches = []  # list of patches that will be converted to a PatchCollection
@@ -163,11 +166,11 @@ def fill_projected_faces(lat_face_all, lon_face_all,
                                 **kwargs)
     patch_collection = PatchCollection(patches)
     ax.add_collection(patch_collection)
-    return patch_collection
+    return ax
 
 
 def fill_projected_faces_euclidean(x, y, z, **kwargs):
-    """Plot a list of faces from euclidean coordinates using a LAEA projection
+    """Plot a list of faces from euclidean coordinates using a LAEA projection.
 
     The x, y, z euclidean coordinates of the faces are converted to geographic
     coordinates before using `fill_projected_faces` to plot them. See this
@@ -231,6 +234,7 @@ def plot_projected_euclidean(x, y, z, **kwargs):
     "Plot from euclidean coordinates using a crs projection."
     lat, lon = cartesian_to_latitude_longitude(x, y, z, deg=True)
     return plot_projected(lon, lat, **kwargs)
+
 
 @grab_current_axis
 def scatter_projected(lon, lat, ax=None, **kwargs):
