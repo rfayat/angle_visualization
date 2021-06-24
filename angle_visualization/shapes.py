@@ -4,7 +4,6 @@ Objects used for plotting 3D shapes with matplotlib.
 Author: Romain Fayat, February 2021
 """
 import numpy as np
-import quaternion
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa W0611
 from matplotlib.patches import FancyArrowPatch
@@ -167,6 +166,7 @@ class Quaternion3D():
 
 
 if __name__ == "__main__":
+    import quaternion
     # Create a rotation quaternion
     angle = np.pi / 6
     angle_cos = np.cos(angle / 2)
