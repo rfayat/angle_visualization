@@ -2,7 +2,7 @@
 A few python tools for visualizing 3D angles, shapes and histograms on the unit sphere with matplotlib.
 
 ## Installation
-### Installation with pip
+### Installation with pip
 Using a python>=3.6 environment, simply clone the repository and install it with pip:
 
 ```bash
